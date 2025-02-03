@@ -1,0 +1,35 @@
+<mujoco model="simple_scene">
+    <visual>
+        <global offwidth="1024" offheight="1024"/>
+    </visual>
+    <option timestep="0.005" gravity="0 0 -9.81"/>
+
+    <asset>
+        <texture name="plane_texture" type="2d" builtin="checker" rgb1="0.2 0.2 0.2" rgb2="0.3 0.3 0.3" width="512" height="512"/>
+        <material name="plane_material" texture="plane_texture" texrepeat="5 5" reflectance="0"/>
+    </asset>
+
+    <worldbody>
+        <geom type="plane" size="1 1 0.1" material="plane_material"/>
+
+        <body pos="0 0 0.5">
+            <geom type="box" size="0.1 0.1 0.1" rgba="0 0.8 0 1"/>
+        </body>
+
+        <body pos="0.2 0 0.5">
+            <geom type="sphere" size="0.1" rgba="0 0.8 0 1"/>
+        </body>
+
+        <body pos="-0.2 0 0.5">
+            <geom type="cylinder" size="0.1 0.15" rgba="0 0 0.8 1"/>
+        </body>
+
+        <body pos="0 0.2 0.5">
+            <geom type="sphere" size="0.01" rgba="0.8 0 0 1"/>
+        </body>
+
+        <!-- Cameras -->
+        <camera name="camera1" pos="0 -0.1 1" fovy="90"/>
+        <camera name="camera2" pos="0 0.1 1" fovy="90"/>
+    </worldbody>
+</mujoco>
