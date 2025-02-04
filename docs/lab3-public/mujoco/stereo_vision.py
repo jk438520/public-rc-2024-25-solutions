@@ -16,15 +16,89 @@ img1 = cv2.imread('left.png')
 img2 = cv2.imread('right.png')
 
 #TODO: find the positions of the objects and reconstruct the images
+def get_centroid(contour):
+    M = cv2.moments(contour)
+    cx = int(M['m10']/M['m00'])
+    cy = int(M['m01']/M['m00'])
+    return cx, cy
+
+
+def find_contour_of_range(img, lowe, upper):
+    mask = cv2.inRange(img, lowe, upper)
+    contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    with_cnt = cv2.drawContours(np.copy(img), contours, -1, (0,255,0), 3)
+    
+    cx, cy = get_centroid(contours[0])
+    color = img[cy, cx]
+    
+    with_cnt = cv2.circle(with_cnt, (cx, cy), 3, color=(255, 255, 0))
+    cv2.imwrite(f"contours{color}.png", with_cnt)
+    
+    return contours
+    
+
+
+red_lower = np.array([00, 00, 0x5c])
+red_upper = np.array([0x2d, 0x2d, 0xab])
+
+green_lower = np.array([0x02, 0x82, 0x02]) - 2
+green_upper = green_lower + 25
+
+blue_lower = np.array([0x97, 0x17, 0x17]) - 20
+blue_upper = blue_lower + 35
+
+
+f = 640 / np.tan(np.pi / 4)
+
+def xyz(ul, vl, ur, vr):
+    ox = 640
+    oy = 640
+    x = baseline * (ul - ox) / (ul - ur)
+    y = baseline * (vl - oy) / (ul - ur)
+    z = baseline * f / (ul - ur)
+    return x, y, z
+
+def match_centroid(img1, img2, lower_bound, upper_bound):
+    countur1 = find_contour_of_range(img1, lower_bound, upper_bound)
+    countur2 = find_contour_of_range(img2, lower_bound, upper_bound)
+
+    center1x, center1y = get_centroid(countur1[0])
+    center2x, center2y = get_centroid(countur2[0])
+
+    print(f"{(center1x, center1y)=}")
+    print(f"{(center2x, center2y)=}")
+    
+    return  xyz(center1x, center1y, center2x, center2y)
+
+red_ball_pos = np.array(match_centroid(img1, img2, red_lower, red_upper))
+
+green_top_pos = np.array(match_centroid(img1, img2, green_lower, green_upper))
+
+blue_top_pos = np.array(match_centroid(img1, img2, blue_lower, blue_upper))
+
+green_size = 0.1
+blue_size = 0.04
+
+def push_and_swap(v):
+    
+    return np.array([v[0], -v[1], 1-v[2]])
+
+
+green_mid_pose = green_top_pos + np.array([0, 0, green_size/2])
+blue_mid_pose = blue_top_pos + np.array([0, 0, blue_size/2])
+
+red_ball_pos = push_and_swap(red_ball_pos)
+green_mid_pose = push_and_swap(green_mid_pose)
+blue_mid_pose = push_and_swap(blue_mid_pose)
 
 # red sphere
-pos_sphere = (...)
+pos_sphere = red_ball_pos
 
 # green box
-pos_box1 = (...)
+pos_box1 = green_mid_pose
 
 # blue box
-pos_box2 = (...)
+pos_box2 = blue_mid_pose
 
 xml_string =f"""\
 <mujoco model="simple_scene">
